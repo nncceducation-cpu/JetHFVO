@@ -2,7 +2,7 @@
 
 An interactive, mobile-first bedside reference for Bunnell Life Pulse high-frequency jet ventilation (HFJV) in extremely premature neonates.
 
-**Live tool:** https://jet-at-a-glance-hfjv.calnncc.chatgpt.site/
+**Live public tool:** https://jet-at-a-glance-hfjv.calnncc.chatgpt.site/
 
 ## What is included
 
