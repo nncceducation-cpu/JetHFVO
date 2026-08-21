@@ -40,9 +40,10 @@ test("keeps image review local and findings confirmation-gated", async () => {
   assert.match(page, /disabled=\{!attested\}/);
   assert.match(page, /confirmedIsCurrent/);
   assert.match(page, /assessmentFingerprint\(confirmedXray\)/);
-  assert.match(page, /sessionStorage\.setItem\(agreementStorageKey, "accepted"\)/);
+  assert.doesNotMatch(page, /sessionStorage|localStorage/);
   assert.match(page, /disabled=\{!agreementChecked\}/);
   assert.match(page, /inert=\{agreementStatus !== "accepted"\}/);
+  assert.match(page, /A new acknowledgement is required whenever this page is loaded/);
   assert.match(guidance, /Do not begin a recruitment maneuver/);
   assert.match(guidance, /Resolve airway position before routine setting changes/);
   assert.match(layout, /\/og\.png/);

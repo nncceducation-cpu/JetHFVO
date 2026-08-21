@@ -63,8 +63,6 @@ const findingOptions: { value: XrayFinding; label: string; help: string }[] = [
   { value: "pleuralAir", label: "Pleural air / pneumothorax", help: "Pleural line or abnormal lucency" },
 ];
 
-const agreementStorageKey = "jethfvo-clinical-agreement-v1";
-
 type AgreementStatus = "pending" | "accepted" | "declined";
 
 type Pathway = keyof typeof pathways;
@@ -104,13 +102,6 @@ export default function Home() {
   const [inverted, setInverted] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (window.sessionStorage.getItem(agreementStorageKey) === "accepted") setAgreementStatus("accepted");
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
     const locked = agreementStatus !== "accepted";
     document.body.classList.toggle("agreement-locked", locked);
     return () => document.body.classList.remove("agreement-locked");
@@ -143,7 +134,6 @@ export default function Home() {
   const reset = () => { setPip("20"); setPeep("7"); setRate("420"); setTi("0.020"); setFio2("0.40"); setCvRate("0"); setPriorCo2("70"); setCurrentCo2("60"); };
   const acceptAgreement = () => {
     if (!agreementChecked) return;
-    window.sessionStorage.setItem(agreementStorageKey, "accepted");
     setAgreementStatus("accepted");
   };
   const declineAgreement = () => { setAgreementChecked(false); setAgreementStatus("declined"); };
@@ -197,7 +187,7 @@ export default function Home() {
             <div className="agreement-actions">
               <label className="agreement-check"><input type="checkbox" checked={agreementChecked} onChange={(event) => setAgreementChecked(event.target.checked)} /><span>I have read, understood, and agree to these conditions.</span></label>
               <div><button type="button" className="agreement-secondary" onClick={declineAgreement}>I Do Not Agree: Exit</button><button type="button" className="agreement-primary" disabled={!agreementChecked} onClick={acceptAgreement}>I Agree: Enter Tool</button></div>
-              <small>Disclaimer version 1.0 | Last updated: August 2026 | Acceptance applies to this browser tab.</small>
+              <small>Disclaimer version 1.0 | Last updated: August 2026 | A new acknowledgement is required whenever this page is loaded.</small>
             </div>
           </>}
         </section>
