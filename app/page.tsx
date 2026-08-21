@@ -63,6 +63,10 @@ const findingOptions: { value: XrayFinding; label: string; help: string }[] = [
   { value: "pleuralAir", label: "Pleural air / pneumothorax", help: "Pleural line or abnormal lucency" },
 ];
 
+const agreementStorageKey = "jethfvo-clinical-agreement-v1";
+
+type AgreementStatus = "pending" | "accepted" | "declined";
+
 type Pathway = keyof typeof pathways;
 type Pattern = keyof typeof patterns;
 type NumFieldProps = { label: string; value: string; onChange: (value: string) => void; unit: string; step?: string };
@@ -76,6 +80,8 @@ function ChoiceGroup<T extends string>({ legend, value, options, onChange }: { l
 }
 
 export default function Home() {
+  const [agreementStatus, setAgreementStatus] = useState<AgreementStatus>("pending");
+  const [agreementChecked, setAgreementChecked] = useState(false);
   const [selected, setSelected] = useState<Pathway>("hypoxemia");
   const [pattern, setPattern] = useState<Pattern>("rds");
   const [pip, setPip] = useState("20");
@@ -96,6 +102,19 @@ export default function Home() {
   const [contrast, setContrast] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [inverted, setInverted] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (window.sessionStorage.getItem(agreementStorageKey) === "accepted") setAgreementStatus("accepted");
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const locked = agreementStatus !== "accepted";
+    document.body.classList.toggle("agreement-locked", locked);
+    return () => document.body.classList.remove("agreement-locked");
+  }, [agreementStatus]);
 
   useEffect(() => () => {
     if (imageUrl) URL.revokeObjectURL(imageUrl);
@@ -122,9 +141,69 @@ export default function Home() {
   const loadImage = (file: File | null) => { setImageFile(file); setImageUrl(file ? URL.createObjectURL(file) : null); };
   const clearXray = () => { setXrayDraft(defaultXrayAssessment); setConfirmedXray(null); setAttested(false); setImageFile(null); setImageUrl(null); setZoom(1); setBrightness(1); setContrast(1); setRotation(0); setInverted(false); };
   const reset = () => { setPip("20"); setPeep("7"); setRate("420"); setTi("0.020"); setFio2("0.40"); setCvRate("0"); setPriorCo2("70"); setCurrentCo2("60"); };
+  const acceptAgreement = () => {
+    if (!agreementChecked) return;
+    window.sessionStorage.setItem(agreementStorageKey, "accepted");
+    setAgreementStatus("accepted");
+  };
+  const declineAgreement = () => { setAgreementChecked(false); setAgreementStatus("declined"); };
 
   return (
-    <main>
+    <>
+      {agreementStatus !== "accepted" && <div className="agreement-gate" role="presentation">
+        <section className="agreement-dialog" role="dialog" aria-modal="true" aria-labelledby="agreement-title" aria-describedby="agreement-summary">
+          {agreementStatus === "declined" ? <div className="agreement-declined">
+            <span className="agreement-kicker">ACCESS NOT GRANTED</span>
+            <h1 id="agreement-title">The tool remains locked</h1>
+            <p id="agreement-summary">You must read and accept the Clinical Use Agreement before using JetHFVO.</p>
+            <button type="button" className="agreement-primary" onClick={() => setAgreementStatus("pending")}>Review the agreement</button>
+          </div> : <>
+            <div className="agreement-header">
+              <span className="agreement-kicker">CLINICAL USE AGREEMENT</span>
+              <h1 id="agreement-title">Please read before using JetHFVO</h1>
+              <p id="agreement-summary">JetHFVO is an educational clinical decision-support reference intended only for trained neonatal clinicians familiar with high-frequency jet ventilation. It is not intended for patients, families, students working without direct supervision, or untrained users.</p>
+            </div>
+
+            <div className="agreement-content">
+              <section>
+                <h2>Important limitations</h2>
+                <ul>
+                  <li>Do not use this tool as the sole basis for diagnosis, treatment, ventilator adjustment, or any other patient-care decision.</li>
+                  <li>This tool does not autonomously interpret chest X-rays. All radiographic findings are observations entered and confirmed by the user.</li>
+                  <li>Guidance is general and may be incomplete, outdated, or inappropriate for a particular infant.</li>
+                  <li>Always independently verify information against the infant&apos;s complete clinical assessment, official radiology report, institutional protocols, attending plan, respiratory therapy guidance, current laboratory data, and applicable ventilator manufacturer instructions.</li>
+                  <li>Confirm all ventilator settings, calculations, alarms, tube positions, and proposed changes before acting. Reassess the infant after every intervention.</li>
+                  <li>Do not delay emergency assessment, stabilization, consultation, or escalation of care while using this tool.</li>
+                </ul>
+              </section>
+
+              <section>
+                <h2>Privacy</h2>
+                <p>Do not enter patient names, medical record numbers, dates of birth, or other identifying health information. Only de-identified chest X-ray images may be opened. Images are intended to remain within the local browser session, but users must still follow institutional privacy and device-security policies.</p>
+              </section>
+
+              <section>
+                <h2>Acknowledgement</h2>
+                <p>By continuing, I confirm that:</p>
+                <ol>
+                  <li>I am a trained neonatal clinician or am using this tool under appropriate clinical supervision.</li>
+                  <li>I understand that JetHFVO provides reference information and does not replace independent professional judgment.</li>
+                  <li>I will verify all findings and guidance using authoritative clinical sources before making patient-care decisions.</li>
+                  <li>I accept responsibility for decisions made while using this tool.</li>
+                </ol>
+              </section>
+            </div>
+
+            <div className="agreement-actions">
+              <label className="agreement-check"><input type="checkbox" checked={agreementChecked} onChange={(event) => setAgreementChecked(event.target.checked)} /><span>I have read, understood, and agree to these conditions.</span></label>
+              <div><button type="button" className="agreement-secondary" onClick={declineAgreement}>I Do Not Agree: Exit</button><button type="button" className="agreement-primary" disabled={!agreementChecked} onClick={acceptAgreement}>I Agree: Enter Tool</button></div>
+              <small>Disclaimer version 1.0 | Last updated: August 2026 | Acceptance applies to this browser tab.</small>
+            </div>
+          </>}
+        </section>
+      </div>}
+
+      <main aria-hidden={agreementStatus !== "accepted"} inert={agreementStatus !== "accepted"}>
       <header className="hero" id="top">
         <div className="brandline"><span className="pulse" /> NICU CALL TOOL <span className="version">HFJV • Bunnell Life Pulse</span></div>
         <div className="hero-grid"><div><h1>Jet at a glance</h1><p className="dek">A rapid bedside aid for extremely premature neonates. Read the film systematically, separate oxygenation from ventilation, then reassess.</p></div><button className="print-button" onClick={() => window.print()}>Print one-page view</button></div>
@@ -246,6 +325,7 @@ export default function Home() {
       </section>
 
       <footer><a href="#top">Back to top ↑</a><span>Educational aid • Local image viewing only • No patient identifiers • Last evidence check: August 20, 2026</span></footer>
-    </main>
+      </main>
+    </>
   );
 }
