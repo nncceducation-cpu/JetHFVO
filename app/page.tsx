@@ -14,6 +14,8 @@ import {
   type XrayFinding,
 } from "./xray-guidance";
 
+export const dynamic = "force-static";
+
 const pathways = {
   hypoxemia: {
     label: "Hypoxemia", color: "oxygen", title: "Think lung volume first", badge: "PEEP / MAP",
