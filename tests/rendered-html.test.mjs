@@ -23,6 +23,9 @@ test("server-renders the HFJV and chest X-ray tool", async () => {
   assert.match(html, /Confirm and integrate/i);
   assert.match(html, /CONFIRMED CXR OVERRIDE CHECK/i);
   assert.match(html, /HFJV \+ CXR Call Tool/i);
+  assert.match(html, /Clinical Use Agreement/i);
+  assert.match(html, /I have read, understood, and agree/i);
+  assert.match(html, /I Agree: Enter Tool/i);
   assert.doesNotMatch(html, /Your site is taking shape|Building your site/i);
 });
 
@@ -37,6 +40,9 @@ test("keeps image review local and findings confirmation-gated", async () => {
   assert.match(page, /disabled=\{!attested\}/);
   assert.match(page, /confirmedIsCurrent/);
   assert.match(page, /assessmentFingerprint\(confirmedXray\)/);
+  assert.match(page, /sessionStorage\.setItem\(agreementStorageKey, "accepted"\)/);
+  assert.match(page, /disabled=\{!agreementChecked\}/);
+  assert.match(page, /inert=\{agreementStatus !== "accepted"\}/);
   assert.match(guidance, /Do not begin a recruitment maneuver/);
   assert.match(guidance, /Resolve airway position before routine setting changes/);
   assert.match(layout, /\/og\.png/);
